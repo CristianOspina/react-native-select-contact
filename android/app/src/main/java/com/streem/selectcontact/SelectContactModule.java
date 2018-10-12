@@ -12,7 +12,13 @@ import android.provider.ContactsContract.CommonDataKinds.StructuredPostal;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.Contacts.Entity;
 import android.util.Log;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.support.annotation.NonNull;
 
+import com.facebook.react.ReactActivity;
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
@@ -21,6 +27,8 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+
+import com.facebook.react.modules.core.PermissionAwareActivity;
 
 public class SelectContactModule extends ReactContextBaseJavaModule implements ActivityEventListener {
 
@@ -32,6 +40,7 @@ public class SelectContactModule extends ReactContextBaseJavaModule implements A
     public static final String E_CONTACT_PERMISSION = "E_CONTACT_PERMISSION";
     private Promise mContactsPromise;
     private final ContentResolver contentResolver;
+    private Promise reactContactsPromise;
 
     public SelectContactModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -44,9 +53,38 @@ public class SelectContactModule extends ReactContextBaseJavaModule implements A
         return "SelectContact";
     }
 
+    private boolean permissionsCheck(int requestCode){
+        Activity  activity = getCurrentActivity();
+        if(ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.READ_CONTACTS}, requestCode);
+            return false;
+        }else{
+            return true;
+        }
+    }
+
+
+//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+//         boolean permissionsGranted = true;
+//         for (int i = 0; i < permissions.length; i++)
+//         {
+//             final boolean granted = grantResults[i] == PackageManager.PERMISSION_GRANTED;
+//             permissionsGranted = permissionsGranted && granted;
+//         }
+//         if (!permissionsGranted) {
+//             return;
+//         }
+//         launchPicker(reactContactsPromise, CONTACT_REQUEST);
+
+//     }
 
     @ReactMethod
     public void openContactSelection(Promise contactsPromise) {
+        //reactContactsPromise = contactsPromise;
+        if (!permissionsCheck(CONTACT_REQUEST)) {
+            contactsPromise.reject(E_CONTACT_PERMISSION, "No permission");
+            return;
+        }
         launchPicker(contactsPromise, CONTACT_REQUEST);
     }
 
