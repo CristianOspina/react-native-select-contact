@@ -127,6 +127,7 @@ public class SelectContactModule extends ReactContextBaseJavaModule implements A
 
         try {
             String id = getContactId(intent.getData());
+            contactData.putString("recordId", id);
             Uri contactUri = buildContactUri(id);
             boolean foundData = false;
 
